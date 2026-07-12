@@ -1,127 +1,113 @@
-// ============================================================
-// AssetFlow ERP — Navigation Sidebar
-// ============================================================
-
-import { cn } from '@/lib/utils';
-import { SIDEBAR_ITEMS } from '@/lib/constants';
+import { useLocation, useNavigate } from 'react-router';
+import { useAuth } from '@/hooks/useAuth';
+import type { UserRole } from '@/types';
 import {
-  LayoutDashboard, Building2, Package, ArrowLeftRight,
-  CalendarClock, Wrench, ClipboardCheck, BarChart3, Bell,
-  ChevronLeft, ChevronRight, Hexagon,
+  LayoutDashboard,
+  Building2,
+  Package,
+  ArrowLeftRight,
+  CalendarDays,
+  Wrench,
+  ClipboardCheck,
+  BarChart3,
+  Bell,
+  Settings,
+  LogOut,
 } from 'lucide-react';
-import type { AppScreen } from '@/types';
-import { motion } from 'framer-motion';
 
-const ICON_MAP: Record<string, React.ElementType> = {
-  LayoutDashboard, Building2, Package, ArrowLeftRight,
-  CalendarClock, Wrench, ClipboardCheck, BarChart3, Bell,
-};
-
-interface SidebarProps {
-  currentScreen: AppScreen;
-  onScreenChange: (screen: AppScreen) => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
+interface NavItem {
+  label: string;
+  icon: React.ElementType;
+  href: string;
+  roles: UserRole[];
 }
 
-export function Sidebar({ currentScreen, onScreenChange, collapsed, onToggleCollapse }: SidebarProps) {
+const navItems: NavItem[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard', roles: ['admin', 'asset_manager', 'department_head', 'employee'] },
+  { label: 'Organization Setup', icon: Building2, href: '/organization', roles: ['admin'] },
+  { label: 'Assets', icon: Package, href: '/assets', roles: ['admin', 'asset_manager', 'department_head'] },
+  { label: 'Allocation & Transfer', icon: ArrowLeftRight, href: '/allocation', roles: ['admin', 'asset_manager', 'department_head'] },
+  { label: 'Resource Booking', icon: CalendarDays, href: '/booking', roles: ['admin', 'asset_manager', 'department_head', 'employee'] },
+  { label: 'Maintenance', icon: Wrench, href: '/maintenance', roles: ['admin', 'asset_manager', 'department_head', 'employee'] },
+  { label: 'Audit', icon: ClipboardCheck, href: '/audit', roles: ['admin', 'asset_manager'] },
+  { label: 'Reports & Analytics', icon: BarChart3, href: '/reports', roles: ['admin', 'asset_manager', 'department_head'] },
+  { label: 'Notifications', icon: Bell, href: '/notifications', roles: ['admin', 'asset_manager', 'department_head', 'employee'] },
+  { label: 'Settings', icon: Settings, href: '/settings', roles: ['admin', 'asset_manager', 'department_head', 'employee'] },
+];
+
+export default function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const filteredNavItems = navItems.filter(item => 
+    user?.role && item.roles.includes(user.role)
+  );
+
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: collapsed ? 68 : 256 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={cn(
-        'h-full bg-white border-r border-slate-200/80 flex flex-col relative',
-        'shadow-[0_0_20px_rgba(0,0,0,0.04)] z-20'
-      )}
-    >
+    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-navy-800 flex flex-col z-50">
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-slate-100 shrink-0">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-8 h-8 rounded-lg bg-[#2563eb] flex items-center justify-center shrink-0 shadow-sm">
-            <Hexagon className="w-5 h-5 text-white" strokeWidth={2.2} />
-          </div>
-          <motion.span
-            initial={false}
-            animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto' }}
-            transition={{ duration: 0.2 }}
-            className="font-semibold text-[15px] text-slate-800 whitespace-nowrap overflow-hidden"
-          >
-            AssetFlow
-          </motion.span>
+      <div className="px-6 pt-6 pb-4 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-royal flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="9" height="9" rx="2" stroke="white" strokeWidth="2" fill="none"/>
+            <rect x="13" y="2" width="9" height="9" rx="2" stroke="white" strokeWidth="2" fill="none"/>
+            <rect x="2" y="13" width="9" height="9" rx="2" stroke="white" strokeWidth="2" fill="none"/>
+            <rect x="13" y="13" width="9" height="9" rx="2" stroke="white" strokeWidth="2" fill="rgba(255,255,255,0.3)"/>
+          </svg>
         </div>
+        <span className="text-white font-semibold text-lg tracking-tight">AssetFlow</span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden scrollbar-thin">
-        <div className="space-y-1">
-          {SIDEBAR_ITEMS.map((item) => {
-            const Icon = ICON_MAP[item.icon];
-            const isActive = item.id === currentScreen;
-            const isClickable = item.active;
+      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+        <ul className="space-y-1">
+          {filteredNavItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            const Icon = item.icon;
             
             return (
-              <button
-                key={item.id}
-                onClick={() => isClickable && onScreenChange(item.id as AppScreen)}
-                disabled={!isClickable}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium',
-                  'transition-all duration-200 relative group',
-                  isActive && isClickable
-                    ? 'bg-[#2563eb]/10 text-[#2563eb]'
-                    : isClickable
-                    ? 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                    : 'text-slate-300 cursor-not-allowed'
-                )}
-                title={collapsed ? item.label : undefined}
-              >
-                {isActive && isClickable && (
-                  <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#2563eb] rounded-r-full"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive && isClickable && 'stroke-[2.5]')} />
-                <motion.span
-                  initial={false}
-                  animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto' }}
-                  transition={{ duration: 0.2 }}
-                  className="whitespace-nowrap overflow-hidden text-left"
+              <li key={item.href}>
+                <button
+                  onClick={() => navigate(item.href)}
+                  className={`
+                    w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                    ${isActive 
+                      ? 'bg-[rgba(30,106,248,0.15)] text-royal' 
+                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }
+                  `}
                 >
-                  {item.label}
-                </motion.span>
-                {isActive && isClickable && !collapsed && (
-                  <motion.div
-                    layoutId="sidebar-dot"
-                    className="ml-auto w-1.5 h-1.5 rounded-full bg-[#2563eb]"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-              </button>
+                  <Icon size={20} className={isActive ? 'text-royal' : 'text-white/40'} />
+                  <span>{item.label}</span>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </nav>
 
-      {/* Collapse Toggle */}
-      <div className="px-3 py-3 border-t border-slate-100 shrink-0">
+      {/* User Section */}
+      <div className="px-3 py-4 border-t border-white/10">
+        {user && (
+          <div className="flex items-center gap-3 px-3 py-2 mb-3">
+            <div className="w-9 h-9 rounded-full bg-royal/20 border border-royal/30 flex items-center justify-center text-royal text-sm font-semibold">
+              {user.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-medium truncate">{user.name}</p>
+              <p className="text-white/40 text-xs capitalize">{user.role.replace('_', ' ')}</p>
+            </div>
+          </div>
+        )}
         <button
-          onClick={onToggleCollapse}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[12px] text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
         >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          <motion.span
-            initial={false}
-            animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto' }}
-            transition={{ duration: 0.2 }}
-            className="whitespace-nowrap overflow-hidden"
-          >
-            Collapse
-          </motion.span>
+          <LogOut size={20} className="text-white/40" />
+          <span>Sign Out</span>
         </button>
       </div>
-    </motion.aside>
+    </aside>
   );
 }

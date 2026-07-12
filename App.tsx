@@ -1,48 +1,61 @@
-// ============================================================
-// AssetFlow ERP — Main Application
-// Screens 8 (Audit), 9 (Reports), 10 (Notifications)
-// ============================================================
+import { Routes, Route, Navigate } from 'react-router';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import Dashboard from '@/pages/Dashboard';
 
-import { useState, useCallback } from 'react';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { AuditScreen } from '@/screens/AuditScreen';
-import { ReportsScreen } from '@/screens/ReportsScreen';
-import { NotificationsScreen } from '@/screens/NotificationsScreen';
-import { useNotifications } from '@/hooks/useNotifications';
-import type { AppScreen } from '@/types';
-import './App.css';
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+}
+
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <Signup />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<AppScreen>('audit');
-  const notifications = useNotifications();
-
-  const handleScreenChange = useCallback((screen: AppScreen) => {
-    setCurrentScreen(screen);
-    if (screen === 'notifications') {
-      notifications.setActiveTab('notifications');
-    }
-  }, [notifications]);
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'audit':
-        return <AuditScreen />;
-      case 'reports':
-        return <ReportsScreen />;
-      case 'notifications':
-        return <NotificationsScreen />;
-      default:
-        return <AuditScreen />;
-    }
-  };
-
   return (
-    <AppLayout
-      currentScreen={currentScreen}
-      onScreenChange={handleScreenChange}
-      unreadCount={notifications.unreadCount}
-    >
-      {renderScreen()}
-    </AppLayout>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
