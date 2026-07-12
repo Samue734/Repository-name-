@@ -1,68 +1,86 @@
-// ============================================================
-// AssetFlow ERP — Confirmation Dialog
-// ============================================================
+// ============================================
+// ASSETFLOW ERP - CONFIRM DIALOG
+// Reusable confirmation modal
+// ============================================
 
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import React from 'react';
+import { AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
 
 interface ConfirmDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'success';
   onConfirm: () => void;
-  onCancel?: () => void;
+  onCancel: () => void;
+  isLoading?: boolean;
 }
 
-const VARIANT_CONFIG = {
-  danger: { icon: AlertTriangle, iconColor: 'text-red-500', bgColor: 'bg-red-50', buttonColor: 'bg-red-600 hover:bg-red-700' },
-  warning: { icon: AlertTriangle, iconColor: 'text-amber-500', bgColor: 'bg-amber-50', buttonColor: 'bg-amber-600 hover:bg-amber-700' },
-  info: { icon: CheckCircle, iconColor: 'text-blue-500', bgColor: 'bg-blue-50', buttonColor: 'bg-blue-600 hover:bg-blue-700' },
-};
+export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
+  open,
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  variant = 'warning',
+  onConfirm,
+  onCancel,
+  isLoading = false,
+}) => {
+  if (!open) return null;
 
-export function ConfirmDialog({
-  open, onOpenChange, title, description,
-  confirmLabel = 'Confirm', cancelLabel = 'Cancel',
-  variant = 'warning', onConfirm, onCancel,
-}: ConfirmDialogProps) {
-  const config = VARIANT_CONFIG[variant];
+  const variantConfig = {
+    danger: { icon: AlertTriangle, iconColor: 'text-red-500', bgColor: 'bg-red-50', btnColor: 'bg-red-600 hover:bg-red-700' },
+    warning: { icon: AlertTriangle, iconColor: 'text-amber-500', bgColor: 'bg-amber-50', btnColor: 'bg-amber-600 hover:bg-amber-700' },
+    info: { icon: Info, iconColor: 'text-blue-500', bgColor: 'bg-blue-50', btnColor: 'bg-blue-600 hover:bg-blue-700' },
+    success: { icon: CheckCircle, iconColor: 'text-green-500', bgColor: 'bg-green-50', btnColor: 'bg-green-600 hover:bg-green-700' },
+  };
+
+  const config = variantConfig[variant];
   const Icon = config.icon;
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader className="gap-3">
-          <div className={cn('w-12 h-12 rounded-full flex items-center justify-center', config.bgColor)}>
-            <Icon className={cn('w-6 h-6', config.iconColor)} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className={`p-2.5 rounded-lg ${config.bgColor}`}>
+              <Icon className={`w-6 h-6 ${config.iconColor}`} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+              <p className="mt-1 text-sm text-gray-500 leading-relaxed">{description}</p>
+            </div>
+            <button 
+              onClick={onCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <AlertDialogTitle className="text-[16px] font-semibold text-slate-800">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="text-[13px] text-slate-500 leading-relaxed">
-            {description}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="gap-2">
-          <AlertDialogCancel 
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+          <button
             onClick={onCancel}
-            className="text-[13px] font-medium border-slate-200 text-slate-600 hover:bg-slate-50"
+            disabled={isLoading}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             {cancelLabel}
-          </AlertDialogCancel>
-          <AlertDialogAction
+          </button>
+          <button
             onClick={onConfirm}
-            className={cn('text-[13px] font-medium text-white', config.buttonColor)}
+            disabled={isLoading}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${config.btnColor}`}
           >
-            {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            {isLoading ? 'Processing...' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default React.memo(ConfirmDialog);

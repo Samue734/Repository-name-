@@ -1,56 +1,72 @@
-// ============================================================
-// AssetFlow ERP — Status Chip / Badge
-// ============================================================
+// ============================================
+// ASSETFLOW ERP - STATUS CHIP COMPONENT
+// Reusable colored status badge
+// ============================================
 
-import { cn } from '@/lib/utils';
-import {
-  AUDIT_STATUS_COLORS, VERIFICATION_STATUS_COLORS, PRIORITY_COLORS,
-  NOTIFICATION_STATUS_COLORS, SEVERITY_COLORS, ASSET_STATUS_COLORS,
-  AUDIT_STATUS_LABELS, VERIFICATION_STATUS_LABELS, NOTIFICATION_TYPE_LABELS, SEVERITY_LABELS,
-} from '@/lib/constants';
-
-type ChipVariant = 'audit' | 'verification' | 'priority' | 'notification' | 'severity' | 'asset';
+import React from 'react';
+import { STATUS_COLORS } from '../../lib/constants';
 
 interface StatusChipProps {
   status: string;
-  variant: ChipVariant;
-  size?: 'sm' | 'md';
   label?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'default' | 'outline' | 'dot';
   className?: string;
 }
 
-const COLOR_MAPS: Record<ChipVariant, Record<string, { bg: string; text: string; border: string; dot?: string }>> = {
-  audit: AUDIT_STATUS_COLORS,
-  verification: VERIFICATION_STATUS_COLORS,
-  priority: PRIORITY_COLORS,
-  notification: NOTIFICATION_STATUS_COLORS,
-  severity: SEVERITY_COLORS,
-  asset: ASSET_STATUS_COLORS,
-};
+export const StatusChip: React.FC<StatusChipProps> = ({ 
+  status, 
+  label,
+  size = 'md',
+  variant = 'default',
+  className = '' 
+}) => {
+  const colors = STATUS_COLORS[status.toLowerCase()] || STATUS_COLORS['info'];
+  const displayLabel = label || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const LABEL_MAPS: Record<string, Record<string, string>> = {
-  audit: AUDIT_STATUS_LABELS,
-  verification: VERIFICATION_STATUS_LABELS,
-  notification: NOTIFICATION_TYPE_LABELS,
-  severity: SEVERITY_LABELS,
-};
+  const sizeClasses = {
+    sm: 'text-xs px-2 py-0.5',
+    md: 'text-sm px-2.5 py-1',
+    lg: 'text-base px-3 py-1.5',
+  };
 
-export function StatusChip({ status, variant, size = 'sm', label, className }: StatusChipProps) {
-  const colors = COLOR_MAPS[variant]?.[status] || { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200', dot: 'bg-slate-400' };
-  const labels = LABEL_MAPS[variant];
-  const displayLabel = label || (labels?.[status] || status.charAt(0).toUpperCase() + status.slice(1));
+  if (variant === 'dot') {
+    return (
+      <span className={`inline-flex items-center gap-1.5 ${className}`}>
+        <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
+        <span className={`${colors.text} font-medium ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+          {displayLabel}
+        </span>
+      </span>
+    );
+  }
+
+  if (variant === 'outline') {
+    return (
+      <span className={`
+        inline-flex items-center rounded-full border font-medium
+        ${colors.border} ${colors.text} ${colors.bg}
+        ${sizeClasses[size]}
+        ${className}
+      `}>
+        {displayLabel}
+      </span>
+    );
+  }
 
   return (
-    <span className={cn(
-      'inline-flex items-center gap-1.5 font-medium rounded-full border',
-      size === 'sm' ? 'px-2 py-0.5 text-[11px]' : 'px-3 py-1 text-[12px]',
-      colors.bg, colors.text, colors.border,
-      className
-    )}>
-      {colors.dot && (
-        <span className={cn('rounded-full', size === 'sm' ? 'w-1.5 h-1.5' : 'w-2 h-2', colors.dot)} />
+    <span className={`
+      inline-flex items-center rounded-full font-medium
+      ${colors.bg} ${colors.text}
+      ${sizeClasses[size]}
+      ${className}
+    `}>
+      {variant === 'default' && (
+        <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} mr-1.5`} />
       )}
       {displayLabel}
     </span>
   );
-}
+};
+
+export default React.memo(StatusChip);

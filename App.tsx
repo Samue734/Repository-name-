@@ -1,61 +1,21 @@
-import { Routes, Route, Navigate } from 'react-router';
-import { AuthProvider, useAuth } from '@/hooks/useAuth';
-import Login from '@/pages/Login';
-import Signup from '@/pages/Signup';
-import Dashboard from '@/pages/Dashboard';
+import React from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { AppLayout } from './components/layout/AppLayout'
+import { OrganizationScreen } from './screens/OrganizationScreen'
+import { BookingScreen } from './screens/BookingScreen'
+import { MaintenanceScreen } from './screens/MaintenanceScreen'
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return <>{children}</>;
-}
-
-function AppRoutes() {
+export const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          <PublicRoute>
-            <Signup />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
-  );
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<Navigate to="/organization" replace />} />
+        <Route path="/organization" element={<OrganizationScreen />} />
+        <Route path="/booking" element={<BookingScreen />} />
+        <Route path="/maintenance" element={<MaintenanceScreen />} />
+      </Routes>
+    </AppLayout>
+  )
 }
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
-  );
-}
+export default App
